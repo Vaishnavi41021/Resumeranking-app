@@ -6,6 +6,7 @@ from sklearn.metrics.pairwise import cosine_similarity
 import base64
 import os
 import time
+import matplotlib.pyplot as plt
 
 def set_background(image_file):
     """Sets a semi-transparent background image in Streamlit."""
@@ -101,6 +102,15 @@ if st.button("Rank Resumes"):
                 result_data.append([uploaded_files[index].name, score])
             
             df = pd.DataFrame(result_data, columns=["Resume Name", "Score"])
+            
+            # Bar Chart Visualization
+            st.subheader("Resume Ranking Visualization")
+            fig, ax = plt.subplots()
+            ax.barh([uploaded_files[i].name for i, _ in rankings], scores, color='blue')
+            ax.set_xlabel("Similarity Score")
+            ax.set_title("Resume Ranking Results")
+            st.pyplot(fig)
+            
             csv = df.to_csv(index=False).encode('utf-8')
             st.download_button("Download Results", data=csv, file_name="ranked_resumes.csv", mime="text/csv")
     else:

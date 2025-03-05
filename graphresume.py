@@ -8,7 +8,7 @@ import os
 import time
 import matplotlib.pyplot as plt
 
-# Function to set the background image//////
+# Function to set the background image
 def set_background(image_file):
     """Sets a semi-transparent background image in Streamlit."""
     if not os.path.exists(image_file):
@@ -24,31 +24,18 @@ def set_background(image_file):
         background: url("data:image/png;base64,{encoded_string}") no-repeat center center fixed;
         background-size: cover;
     }}
-    
-    .stApp::before {{
-        content: "";
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: rgba(255, 255, 255, 0.3);  /* Reduced transparency */
-        z-index: -1;
-    }}
-    
     .block-container {{
         background: rgba(255, 255, 255, 0.9);
         padding: 20px;
         border-radius: 10px;
         box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
-        margin-top: 80px;
     }}
     </style>
     """
     st.markdown(background_css, unsafe_allow_html=True)
 
-# Set background image (update the correct path)
-image_path = "assets/backgroundAicte.png"  # Ensure the correct path
+# Set background image (Ensure correct relative path)
+image_path = "backgroundAicte.png"  # If in the main directory
 set_background(image_path)
 
 # Function to extract text from PDFs
@@ -70,7 +57,9 @@ def rank_resumes(job_description, resumes):
 
 # Page Title
 st.markdown(
-    "<h1 style='text-align: center; color: var(--text-color, black);'>Resume Ranking System</h1>",
+    """
+    <h1 style='text-align: center; color: black;'>Resume Ranking System</h1>
+    """,
     unsafe_allow_html=True,
 )
 
@@ -107,7 +96,7 @@ if st.button("Rank Resumes"):
             st.subheader("Ranked Resumes")
             result_data = []
             for i, (index, score) in enumerate(rankings):
-                st.write(f"Rank {i+1}: {uploaded_files[index].name} (Score: {score:.2f})")
+                st.write(f"**Rank {i+1}:** {uploaded_files[index].name} (Score: {score:.2f})")
                 st.progress(int(score * 100))
                 result_data.append([uploaded_files[index].name, score])
             
@@ -116,10 +105,12 @@ if st.button("Rank Resumes"):
             # Bar Chart Visualization
             st.subheader("Resume Ranking Visualization")
             fig, ax = plt.subplots()
-            ax.barh([uploaded_files[i].name for i, _ in rankings], scores, color=['blue', 'purple', 'orange', 'yellow'])
+            names = [uploaded_files[i].name for i, _ in rankings]
+            scores = [score for _, score in rankings]
+            ax.barh(names, scores, color='skyblue')
             ax.set_xlabel("Similarity Score")
             ax.set_title("Resume Ranking Results")
-            ax.invert_yaxis()  # Highest rank at top
+            ax.invert_yaxis()
             st.pyplot(fig)
             
             # Download button for ranked resumes

@@ -6,7 +6,9 @@ from sklearn.metrics.pairwise import cosine_similarity
 import base64
 import os
 import time
+import matplotlib.pyplot as plt
 
+# Function to set the background image
 def set_background(image_file):
     """Sets a semi-transparent background image in Streamlit."""
     if not os.path.exists(image_file):
@@ -30,12 +32,12 @@ def set_background(image_file):
         left: 0;
         width: 100%;
         height: 100%;
-        background: rgba(255, 255, 255, 0.7);
+        background: rgba(255, 255, 255, 0.3);  /* Reduced transparency */
         z-index: -1;
     }}
     
     .block-container {{
-        background: rgba(255, 255, 255, 0.95);
+        background: rgba(255, 255, 255, 0.9);
         padding: 20px;
         border-radius: 10px;
         box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
@@ -45,9 +47,11 @@ def set_background(image_file):
     """
     st.markdown(background_css, unsafe_allow_html=True)
 
-image_path = r"c:\\Users\\Admin\\Pictures\\New folder\\backgroundAicte.png"
+# Set background image (update the correct path)
+image_path = "assets/backgroundAicte.png"  # Ensure the correct path
 set_background(image_path)
 
+# Function to extract text from PDFs
 def extract_text_from_pdf(file):
     pdf = PdfReader(file)
     text = ""
@@ -55,6 +59,7 @@ def extract_text_from_pdf(file):
         text += page.extract_text() or ""
     return text
 
+# Function to rank resumes based on job description
 def rank_resumes(job_description, resumes):
     vectorizer = TfidfVectorizer()
     documents = [job_description] + resumes
@@ -63,6 +68,7 @@ def rank_resumes(job_description, resumes):
     ranked_resumes = sorted(enumerate(similarity_scores), key=lambda x: x[1], reverse=True)
     return ranked_resumes, similarity_scores
 
+# Page Title
 st.markdown(
     "<h1 style='text-align: center; color: var(--text-color, black);'>Resume Ranking System</h1>",
     unsafe_allow_html=True,
@@ -73,19 +79,24 @@ dark_mode = st.checkbox("🌙 Dark Mode")
 if dark_mode:
     st.markdown("""
         <style>
-        body { background-color: #121212; color: white; }
-        .block-container { background: #333; }
+        body, .stApp { background-color: #121212 !important; color: white !important; }
+        .block-container { background: rgba(50, 50, 50, 0.9) !important; }
+        .stTextInput, .stTextArea, .stFileUploader { color: white !important; }
+        .stProgress { background-color: #444 !important; }
         </style>
     """, unsafe_allow_html=True)
 
+# Upload PDFs
 uploaded_files = st.file_uploader("Upload resumes (PDF)", accept_multiple_files=True)
 job_desc = st.text_area("Enter Job Description")
 
+# Show uploaded files
 if uploaded_files:
     st.subheader("Uploaded Files")
     for file in uploaded_files:
         st.write(f"📄 {file.name} ({file.size / 1024:.2f} KB)")
 
+# Rank resumes
 if st.button("Rank Resumes"):
     if uploaded_files and job_desc:
         with st.spinner("Ranking resumes, please wait..."):
@@ -101,6 +112,17 @@ if st.button("Rank Resumes"):
                 result_data.append([uploaded_files[index].name, score])
             
             df = pd.DataFrame(result_data, columns=["Resume Name", "Score"])
+            
+            # Bar Chart Visualization
+            st.subheader("Resume Ranking Visualization")
+            fig, ax = plt.subplots()
+            ax.barh([uploaded_files[i].name for i, _ in rankings], scores, color=['blue', 'purple', 'orange', 'yellow'])
+            ax.set_xlabel("Similarity Score")
+            ax.set_title("Resume Ranking Results")
+            ax.invert_yaxis()  # Highest rank at top
+            st.pyplot(fig)
+            
+            # Download button for ranked resumes
             csv = df.to_csv(index=False).encode('utf-8')
             st.download_button("Download Results", data=csv, file_name="ranked_resumes.csv", mime="text/csv")
     else:
